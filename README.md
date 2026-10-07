@@ -1,89 +1,74 @@
-# Development Environment Setup
+# kk's macOS dotfiles
 
-This repository contains scripts and configuration files to set up a development environment for macOS. It's tailored for software development, focusing on a clean, minimal, and efficient setup.
+Current setup for Apple's built-in Terminal: Catppuccin Mocha colors, MesloLGS NF 14pt, a single-line Powerlevel10k prompt, command suggestions, syntax highlighting, completion menus, and history search. No additional terminal application is needed. Apple Terminal does not support smooth cursor animation.
 
-## YouTube Video Walkthrough
+## Install or apply changes
 
-I will provide a video walkthrough of these dotfiles here once that video is recorded and published
+```sh
+git clone https://github.com/kkz6/dotfiles.git ~/projects/dotfiles
+cd ~/projects/dotfiles
+./install.sh
+exec zsh
+```
 
-<!-- [![Watch the video](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+Requires macOS, Git, curl, and Python 3. `install.sh` downloads missing Oh My Zsh components and four Meslo font styles from their official repositories, then links the managed configuration files. Existing files are backed up under `~/.dotfiles-backup-<timestamp>-<unique suffix>/` before replacement. Existing links to this repository are left intact on subsequent runs.
 
-Replace `VIDEO_ID` with your video's ID to embed the walkthrough video here. -->
+The installer merges the Mocha profile into Terminal preferences, preserves other profiles, and sets Mocha as the default and startup profile. Quit Terminal before applying profile changes, then reopen it. In an existing window, select **Shell → New Window → Mocha** or choose Mocha under **Terminal → Settings → Profiles**. If icons look incorrect, select **MesloLGS NF Regular**, 14pt, in that profile's font settings. Fonts are installed in `~/Library/Fonts`.
 
-## Overview
+To apply only the shell files using already installed dependencies:
 
-The setup includes automated scripts for installing essential software, configuring Bash and Zsh shells, and setting up Sublime Text and Visual Studio Code editors. This guide will help you replicate my development environment on your machine if you desire to do so.
+```sh
+./install.sh --skip-deps --skip-terminal
+```
 
-## Important Note Before Installation
+## Managed files
 
-**WARNING:** The configurations and scripts in this repository are **HIGHLY PERSONALIZED** to my own preferences and workflows. If you decide to use them, please be aware that they will **MODIFY** your current system, potentially making some changes that are **IRREVERSIBLE** without a fresh installation of your operating system.
+| Repository file | Installed location |
+| --- | --- |
+| `.zshrc` | `~/.zshrc` |
+| `.zprofile` | `~/.zprofile` |
+| `.p10k.zsh` | `~/.p10k.zsh` |
+| `config/mise/config.toml` | `~/.config/mise/config.toml` |
+| `settings/Mocha.terminal` | Mocha profile in Apple Terminal preferences |
 
-Furthermore, while I strive to backup files wherever possible, I cannot guarantee that all files are backed up. The backup mechanism is designed to backup SOME files **ONCE**. If the script is run more than once, the initial backups will be **OVERWRITTEN**, potentially resulting in loss of data. While I could implement timestamped backups to preserve multiple versions, this setup is optimized for my personal use, and a single backup suffices for me.
+Edit these files in the repository; symlinked shell files use the changes on the next shell startup. Reapply `install.sh` for Terminal profile changes. Place private values and machine-specific overrides in `~/.zshrc.local`, which is ignored by Git. Do not commit credentials, shell history, or complete Terminal preference exports.
 
-If you would like a development environment similar to mine, I highly encourage you to fork this repository and make your own personalized changes to these scripts instead of running them exactly as I have them written for myself.
+Homebrew is detected for either Apple Silicon or Intel. If mise is installed, its shell integration loads automatically. The mise configuration retains Go set to `latest`; install it with `mise install` when needed. Herd PHP and Node integration loads only when Herd is present. Homebrew, mise, and Herd are not installed by this script.
 
-A less serious (but potentially annoying) change it will make is setting the Desktop background to the image I use in my tutorials. This is the script I use to set up machines I will be recording on, after all.
+Right arrow accepts suggestions; Tab completes; Up/Down searches history using the text already typed; `z <folder-name>` jumps to previously visited folders.
 
-I likely won't accept pull requests unless they align closely with my personal preferences and the way I use my development environment. But if there are some obvious errors in my scripts then corrections would be welcome!
+## Installing kk CLI
 
-If you choose to run these scripts, please do so with **EXTREME CAUTION**. It's recommended to review the scripts and understand the changes they will make to your system before proceeding.
+CLI source and build changes belong in [kk-cli](https://github.com/kkz6/kk-cli). Its local Makefile installs to `~/.local/bin`, creating the directory and using executable permissions without sudo. This directory is included in the managed shell PATH.
 
-By using these scripts, you acknowledge and accept the risk of potential data loss or system alteration. Proceed at your own risk.
+```sh
+cd ~/projects/kk-cli
+make install
+kk version
+```
 
-## Getting Started
+The CLI Makefile change must also be committed in that repository to reproduce it on another machine. The binary is not stored in dotfiles.
 
-### Prerequisites
+## Restore
 
-- macOS (The scripts are tailored for macOS)
+Choose the backup directory printed by the installer. For each file to restore, remove only its managed symlink and move the matching backed-up file back to its original path. For example:
 
-### Installation
+```sh
+# Replace BACKUP with the actual backup directory.
+rm ~/.zshrc
+mv BACKUP/.zshrc ~/.zshrc
+```
 
-1. Clone the repository to your local machine:
-   ```sh
-   git clone https://github.com/CoreyMSchafer/dotfiles.git ~/dotfiles
-   ```
-2. Navigate to the `dotfiles` directory:
-   ```sh
-   cd ~/dotfiles
-   ```
-3. Run the installation script:
-   ```sh
-   ./install.sh
-   ```
+With Terminal quit, restore its preferences if a `Terminal.plist` backup exists:
 
-This script will:
+```sh
+defaults import com.apple.Terminal BACKUP/Terminal.plist
+```
 
-- Create symlinks for dotfiles (`.bashrc`, `.zshrc`, etc.)
-- Run macOS-specific configurations
-- Install Homebrew packages and casks
-- Configure Sublime Text and Visual Studio Code
+## Legacy files
 
-## Configuration Files
-
-- `.bashrc` & `.zshrc`: Shell configuration files for Bash and Zsh.
-- `.shared_prompt`: Custom prompt setup used by both `.bash_prompt` & `.zprompt`
-- `.bash_prompt` & `.zprompt`: Custom prompt setup for Bash and Zsh.
-- `.bash_profile: Setting system-wide environment variables
-- `.aliases`: Aliases for common commands. Some are personalized to my machines specifically (e.g. the 'yt' alias opening my YouTube Scripts')
-- `.private`: This is a file you'll create locally to hold private information and shouldn't be uploaded to version control
-- `settings/`: Directory containing editor settings and themes for Sublime Text and Visual Studio Code.
-
-### Customizing Your Setup
-
-You're encouraged to modify the scripts and configuration files to suit your preferences. Here are some tips for customization:
-
-- **Dotfiles**: Edit `.shared_prompt`, `.zprompt`, `.bash_prompt` to add or modify shell configurations.
-- **Sublime Text and VS Code**: Adjust settings in the `settings/` directory to change editor preferences and themes.
-
-## Contributing
-
-Feel free to fork this repository and customize it for your setup. Pull requests for improvements and bug fixes are welcome, but as said above, I likely won't accept pull requests that simply add additional brew installations or change some settings unless they align with my personal preferences.
+The earlier Bash prompts, aliases, editor settings, `brew.sh`, `macOS.sh`, `sublime.sh`, and `vscode.sh` remain for reference. The current installer does not execute them. They describe the older setup and may install additional applications or change unrelated settings.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE-MIT.txt](LICENSE-MIT.txt) file for details.
-
-## Acknowledgments
-
-- I originally forked this from [Mathias Bynens' dotfiles](https://github.com/mathiasbynens/dotfiles)
-- Thanks to all the open-source projects used in this setup.
+See `LICENSE-MIT.txt` for the inherited MIT license and attribution.
