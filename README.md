@@ -1,6 +1,6 @@
 # kk's macOS dotfiles
 
-Current setup for Apple's built-in Terminal: Catppuccin Mocha colors, MesloLGS NF 14pt, a single-line Powerlevel10k prompt, command suggestions, syntax highlighting, completion menus, and history search. No additional terminal application is needed. Apple Terminal does not support smooth cursor animation.
+Catppuccin Mocha colors, MesloLGS NF 14pt, and a compact Powerlevel10k prompt in Apple Terminal. The prompt shows the current folder, Git state, failed commands, and long command times. SSH sessions show the remote user and host, and previous prompts shorten to keep command output easy to scan.
 
 ## Install or apply changes
 
@@ -8,10 +8,12 @@ Current setup for Apple's built-in Terminal: Catppuccin Mocha colors, MesloLGS N
 git clone https://github.com/kkz6/dotfiles.git ~/projects/dotfiles
 cd ~/projects/dotfiles
 ./install.sh
-exec zsh
+exec zsh -l
 ```
 
 Requires macOS, Git, curl, and Python 3. `install.sh` downloads missing Oh My Zsh components and four Meslo font styles from their official repositories, then links the managed configuration files. Existing files are backed up under `~/.dotfiles-backup-<timestamp>-<unique suffix>/` before replacement. Existing links to this repository are left intact on subsequent runs.
+
+For fuzzy search and `rg`, run `./install.sh --with-tools` on a Mac with Homebrew. This adds fzf and ripgrep if they are missing. The prompt and shell features work without these tools.
 
 The installer merges the Mocha profile into Terminal preferences, preserves other profiles, and sets Mocha as the default and startup profile. Quit Terminal before applying profile changes, then reopen it. In an existing window, select **Shell → New Window → Mocha** or choose Mocha under **Terminal → Settings → Profiles**. If icons look incorrect, select **MesloLGS NF Regular**, 14pt, in that profile's font settings. Fonts are installed in `~/Library/Fonts`.
 
@@ -35,7 +37,16 @@ Edit these files in the repository; symlinked shell files use the changes on the
 
 Homebrew is detected for either Apple Silicon or Intel. If mise is installed, its shell integration loads automatically. The mise configuration retains Go set to `latest`; install it with `mise install` when needed. Herd PHP and Node integration loads only when Herd is present. Homebrew, mise, and Herd are not installed by this script.
 
-Right arrow accepts suggestions; Tab completes; Up/Down searches history using the text already typed; `z <folder-name>` jumps to previously visited folders.
+| Shortcut | Action |
+| --- | --- |
+| Right arrow | Accept the current command suggestion |
+| Tab | Open completions |
+| Up / Down | Search history using the text already typed |
+| `z <folder-name>` | Jump to a frequently visited folder |
+| Ctrl+R | Fuzzy search command history with fzf |
+| Ctrl+T | Fuzzy search files and insert the selected path with fzf |
+
+Command history is shared across tabs. Start a command with a space to keep it out of saved history. Set `FZF_DEFAULT_OPTS` or `FZF_DEFAULT_OPTS_FILE` in `~/.zshrc.local` to use a different fzf layout or palette.
 
 ## Installing kk CLI
 

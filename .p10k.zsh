@@ -1,7 +1,7 @@
 # Catppuccin-inspired, compact single-line prompt.
  typeset -g POWERLEVEL9K_MODE=nerdfont-complete
- typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs prompt_char)
- typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time background_jobs)
+ typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(context dir vcs prompt_char)
+ typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time background_jobs virtualenv)
  typeset -g POWERLEVEL9K_ICON_PADDING=none
  typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
  typeset -g POWERLEVEL9K_BACKGROUND=
@@ -30,6 +30,15 @@
  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FOREGROUND=222
  typeset -g POWERLEVEL9K_COMMAND_EXECUTION_TIME_FORMAT='d h m s'
  typeset -g POWERLEVEL9K_BACKGROUND_JOBS_FOREGROUND=183
+ # Display the host on SSH sessions and when running as root.
+ typeset -g POWERLEVEL9K_CONTEXT_{DEFAULT,SUDO}_{CONTENT,VISUAL_IDENTIFIER}_EXPANSION=
+ typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_FOREGROUND=222
+ typeset -g POWERLEVEL9K_CONTEXT_ROOT_FOREGROUND=211
+ typeset -g POWERLEVEL9K_CONTEXT_ROOT_TEMPLATE='%B%n@%m'
+ typeset -g POWERLEVEL9K_CONTEXT_{REMOTE,REMOTE_SUDO}_TEMPLATE='%n@%m'
+ typeset -g POWERLEVEL9K_VIRTUALENV_FOREGROUND=183
+ typeset -g POWERLEVEL9K_VIRTUALENV_SHOW_PYTHON_VERSION=false
+ typeset -g POWERLEVEL9K_TRANSIENT_PROMPT=same-dir
  typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
  typeset -g POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 

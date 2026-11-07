@@ -4,15 +4,35 @@ set -euo pipefail
 repo=$(cd "$(dirname "$0")" && pwd)
 skip_deps=false
 skip_terminal=false
+with_tools=false
 for arg in "$@"; do
     case "$arg" in
         --skip-deps) skip_deps=true ;;
         --skip-terminal) skip_terminal=true ;;
-        *) echo "Usage: $0 [--skip-deps] [--skip-terminal]" >&2; exit 2 ;;
+        --with-tools) with_tools=true ;;
+        *) echo "Usage: $0 [--skip-deps] [--skip-terminal] [--with-tools]" >&2; exit 2 ;;
     esac
 done
 if [[ $(uname -s) != Darwin ]] && ! $skip_terminal; then
     echo 'Use --skip-terminal outside macOS.' >&2; exit 1
+fi
+if $with_tools; then
+    brew_bin=$(command -v brew || true)
+    if [[ -z "$brew_bin" ]]; then
+        for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+            if [[ -x "$candidate" ]]; then
+                brew_bin="$candidate"
+                break
+            fi
+        done
+    fi
+    if [[ -z "$brew_bin" ]]; then
+        echo 'Homebrew is required for --with-tools. Install Homebrew or run without this flag.' >&2
+        exit 1
+    fi
+    for formula in fzf ripgrep; do
+        "$brew_bin" list --versions "$formula" >/dev/null || "$brew_bin" install "$formula"
+    done
 fi
 backup=$(mktemp -d "$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)-XXXXXX")
 echo "Backups: $backup"
@@ -38,4 +58,4 @@ mkdir -p "$HOME/.local/bin"
 if ! $skip_terminal; then
     python3 "$repo/scripts/terminal.py" "$repo/settings/Mocha.terminal" "$backup"
 fi
-echo 'Done. Start a new shell with: exec zsh'
+echo 'Done. Start a new login shell with: exec zsh -l'
