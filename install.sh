@@ -1,38 +1,61 @@
-#!/usr/bin/env zsh
-############################
-# This script creates symlinks from the home directory to any desired dotfiles in $HOME/dotfiles
-# And also installs MacOS Software
-# And also installs Homebrew Packages and Casks (Apps)
-# And also sets up VS Code
-# And also sets up Sublime Text
-############################
-
-# dotfiles directory
-dotfiledir="${HOME}/dotfiles"
-
-# list of files/folders to symlink in ${homedir}
-files=(zshrc zprofile zprompt bashrc bash_profile bash_prompt aliases private)
-
-# change to the dotfiles directory
-echo "Changing to the ${dotfiledir} directory"
-cd "${dotfiledir}" || exit
-
-# create symlinks (will overwrite old dotfiles)
-for file in "${files[@]}"; do
-    echo "Creating symlink to $file in home directory."
-    ln -sf "${dotfiledir}/.${file}" "${HOME}/.${file}"
+#!/bin/bash
+# Link managed files with timestamped backups; install no extra applications.
+set -euo pipefail
+repo=$(cd "$(dirname "$0")" && pwd)
+skip_deps=false
+skip_terminal=false
+with_tools=false
+for arg in "$@"; do
+    case "$arg" in
+        --skip-deps) skip_deps=true ;;
+        --skip-terminal) skip_terminal=true ;;
+        --with-tools) with_tools=true ;;
+        *) echo "Usage: $0 [--skip-deps] [--skip-terminal] [--with-tools]" >&2; exit 2 ;;
+    esac
 done
-
-# Run the MacOS Script
-./macOS.sh
-
-# Run the Homebrew Script
-./brew.sh
-
-# Run VS Code Script
-./vscode.sh
-
-# Run the Sublime Script
-./sublime.sh
-
-echo "Installation Complete!"
+if [[ $(uname -s) != Darwin ]] && ! $skip_terminal; then
+    echo 'Use --skip-terminal outside macOS.' >&2; exit 1
+fi
+if $with_tools; then
+    brew_bin=$(command -v brew || true)
+    if [[ -z "$brew_bin" ]]; then
+        for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+            if [[ -x "$candidate" ]]; then
+                brew_bin="$candidate"
+                break
+            fi
+        done
+    fi
+    if [[ -z "$brew_bin" ]]; then
+        echo 'Homebrew is required for --with-tools. Install Homebrew or run without this flag.' >&2
+        exit 1
+    fi
+    for formula in fzf ripgrep; do
+        "$brew_bin" list --versions "$formula" >/dev/null || "$brew_bin" install "$formula"
+    done
+fi
+backup=$(mktemp -d "$HOME/.dotfiles-backup-$(date +%Y%m%d-%H%M%S)-XXXXXX")
+echo "Backups: $backup"
+if ! $skip_deps; then bash "$repo/scripts/dependencies.sh"; fi
+link_file() {
+    local source="$repo/$1" target="$HOME/$2"
+    mkdir -p "$(dirname "$target")"
+    if [[ -L "$target" ]] && [[ $(readlink "$target") == "$source" ]]; then
+        echo "Already linked: $target"; return
+    fi
+    if [[ -e "$target" || -L "$target" ]]; then
+        mkdir -p "$backup/$(dirname "$2")"
+        mv "$target" "$backup/$2"
+    fi
+    ln -s "$source" "$target"
+    echo "Linked: $target"
+}
+link_file .zshrc .zshrc
+link_file .zprofile .zprofile
+link_file .p10k.zsh .p10k.zsh
+link_file config/mise/config.toml .config/mise/config.toml
+mkdir -p "$HOME/.local/bin"
+if ! $skip_terminal; then
+    python3 "$repo/scripts/terminal.py" "$repo/settings/Mocha.terminal" "$backup"
+fi
+echo 'Done. Start a new login shell with: exec zsh -l'
